@@ -1,4 +1,4 @@
-package main.kotlin.org.example.kquery.datatypes
+package org.example.kquery.datatypes
 
 import org.apache.arrow.vector.types.pojo.Schema
 

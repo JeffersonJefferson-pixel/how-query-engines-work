@@ -1,6 +1,6 @@
 package org.example.kquery.datatypes
 
-import main.kotlin.org.example.kquery.datatypes.ColumnVector
+import org.example.kquery.datatypes.ColumnVector
 import org.apache.arrow.vector.FieldVector
 import org.apache.arrow.vector.IntVector
 
