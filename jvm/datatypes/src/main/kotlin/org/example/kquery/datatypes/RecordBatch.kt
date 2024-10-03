@@ -1,7 +1,5 @@
 package org.example.kquery.datatypes
 
-import org.apache.arrow.vector.types.pojo.Schema
-
 class RecordBatch(val schema: Schema, private val fields: List<ColumnVector>) {
     fun rowCount() = fields.first().size()
 
