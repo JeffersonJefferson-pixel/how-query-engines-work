@@ -30,6 +30,8 @@ class LiteralString(val str: String): LogicalExpr {
     }
 }
 
+fun lit(value: String) = LiteralString(value)
+
 class LiteralLong(val n: Long): LogicalExpr {
     override fun toField(input: LogicalPlan): Field {
         return Field(n.toString(), ArrowTypes.Int64Type);
@@ -82,6 +84,10 @@ class GtEq(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("gteq", ">=", l, 
 class Lt(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("lt", "<", l, r)
 
 class Lte(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("lteq", "<=", l, r)
+
+infix fun LogicalExpr.eq(rhs: LogicalExpr): LogicalExpr {
+    return Eq(this, rhs)
+}
 
 // Boolean Expressions
 
