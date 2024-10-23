@@ -32,6 +32,14 @@ class ArrowFieldVector(private val field: FieldVector) : ColumnVector {
             is BigIntVector -> field.get(i)
             is Float4Vector -> field.get(i)
             is Float8Vector -> field.get(i)
+            is VarBinaryVector -> {
+                val bytes = field.get(i)
+                if (bytes == null ) {
+                    null
+                } else {
+                    String(bytes)
+                }
+            }
             is VarCharVector -> {
                 val bytes = field.get(i)
                 if (bytes == null ) {

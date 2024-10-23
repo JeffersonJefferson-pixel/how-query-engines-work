@@ -101,10 +101,16 @@ class ParquetIterator(
         root.fieldVectors.withIndex().forEach { field ->
             val vector = field.value
             when (vector) {
+                is BitVector -> {
+                    groups.withIndex().forEach { row ->
+                        val value = row.value.getBoolean(vector.name, 0)
+                        vector.set(row.index, value.compareTo(false))
+                    }
+                }
                 is TinyIntVector ->
                     groups.withIndex().forEach { row ->
-                        val valueStr = row.value.getInteger(vector.name, 0)
-                        vector.set(row.index, valueStr.toByte())
+                        val value = row.value.getInteger(vector.name, 0)
+                        vector.set(row.index, value.toByte())
                     }
                 is SmallIntVector ->
                     groups.withIndex().forEach { row ->
@@ -131,13 +137,18 @@ class ParquetIterator(
                         val value = row.value.getDouble(vector.name, 0)
                         vector.set(row.index, value.toDouble())
                     }
+                is VarBinaryVector ->
+                    groups.withIndex().forEach { row ->
+                        val value = row.value.getBinary(vector.name, 0)
+                        vector.set(row.index, value.bytes)
+                    }
                 is VarCharVector ->
                     groups.withIndex().forEach { row ->
                         val value = row.value.getString(vector.name, 0)
                         vector.setSafe(row.index, value.toByteArray())
                     }
                 else ->
-                    throw IllegalStateException("No support for reading CSV columns with data type $vector")
+                    throw IllegalStateException("No support for reading parquet columns with data type $vector")
             }
             vector.valueCount = groups.size
         }
