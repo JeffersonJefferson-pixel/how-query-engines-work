@@ -1,4 +1,4 @@
-package org.example.datasource
+package org.example.kquery.datasource
 
 import org.example.kquery.datasource.CsvDataSource
 import java.io.File

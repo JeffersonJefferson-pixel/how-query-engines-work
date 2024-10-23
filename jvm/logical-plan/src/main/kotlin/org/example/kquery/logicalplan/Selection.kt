@@ -1,6 +1,6 @@
 package org.example.kquery.logicalplan
 
-import org.example.kquery.datatypes.Schema
+import org.example.kquery.datatypes.KQuerySchema
 
 /**
  * Selection logical plan applies a filter expression to determin
@@ -10,7 +10,7 @@ class Selection(
     val input: LogicalPlan,
     val expr: LogicalExpr
 ): LogicalPlan {
-    override fun schema(): Schema {
+    override fun schema(): KQuerySchema {
         return input.schema()
     }
 

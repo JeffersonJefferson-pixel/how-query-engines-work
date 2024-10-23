@@ -1,12 +1,12 @@
 package org.example.kquery.logicalplan
 
 import org.example.kquery.datatypes.ArrowTypes
-import org.example.kquery.datatypes.Field
+import org.example.kquery.datatypes.KQueryField
 import java.sql.SQLException
 
 /** Column expression represents a reference to a named column. */
 class Column(val name: String): LogicalExpr {
-    override fun toField(input: LogicalPlan): Field {
+    override fun toField(input: LogicalPlan): KQueryField {
         return input.schema().fields.find { it.name == name } ?:
             throw SQLException("No column named '$name'")
     }
@@ -21,8 +21,8 @@ fun col(name: String) = Column(name)
 // Literal Expressions.
 
 class LiteralString(val str: String): LogicalExpr {
-    override fun toField(input: LogicalPlan): Field {
-        return Field(str, ArrowTypes.StringType)
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(str, ArrowTypes.StringType)
     }
 
     override fun toString(): String {
@@ -33,8 +33,8 @@ class LiteralString(val str: String): LogicalExpr {
 fun lit(value: String) = LiteralString(value)
 
 class LiteralLong(val n: Long): LogicalExpr {
-    override fun toField(input: LogicalPlan): Field {
-        return Field(n.toString(), ArrowTypes.Int64Type);
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(n.toString(), ArrowTypes.Int64Type);
     }
 
     override fun toString(): String {
@@ -66,8 +66,8 @@ abstract class BooleanBinaryExpr(
     l: LogicalExpr,
     r: LogicalExpr
 ) : BinaryExpr(name, op, l, r) {
-    override fun toField(input: LogicalPlan): Field {
-        return Field(name, ArrowTypes.BooleanType)
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(name, ArrowTypes.BooleanType)
     }
 }
 
@@ -103,8 +103,8 @@ abstract class MathExpr(
     l: LogicalExpr,
     r: LogicalExpr
 ) : BinaryExpr(name, op, l, r) {
-    override fun toField(input: LogicalPlan): Field {
-        return Field(name, l.toField(input).dataType)
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(name, l.toField(input).dataType)
     }
 }
 
@@ -124,8 +124,8 @@ abstract class AggregateExpr(
     val name: String,
     val expr: LogicalExpr
 ) : LogicalExpr {
-    override fun toField(input: LogicalPlan): Field {
-        return Field(name, expr.toField(input).dataType)
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(name, expr.toField(input).dataType)
     }
 
     override fun toString(): String {
@@ -139,7 +139,7 @@ class Max(input: LogicalExpr) : AggregateExpr("MAX", input)
 class Avg(input: LogicalExpr) : AggregateExpr("AVG", input)
 
 class Count(input: LogicalExpr) : AggregateExpr("COUNT", input) {
-    override fun toField(input: LogicalPlan): Field {
-        return Field(name, ArrowTypes.Int32Type)
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(name, ArrowTypes.Int32Type)
     }
 }

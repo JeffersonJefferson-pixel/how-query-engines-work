@@ -1,6 +1,6 @@
 package org.example.kquery.logicalplan
 
-import org.example.kquery.datatypes.Schema
+import org.example.kquery.datatypes.KQuerySchema
 
 /**
  * Aggregate logical plan calculate aggregates of underlying data based on some grouping.
@@ -10,8 +10,8 @@ class Aggregate(
     val groupExpr: List<LogicalExpr>,
     val aggregateExpr: List<LogicalExpr>
 ): LogicalPlan {
-    override fun schema(): Schema {
-        return Schema(groupExpr.map { it.toField(input) } + aggregateExpr.map { it.toField(input) })
+    override fun schema(): KQuerySchema {
+        return KQuerySchema(groupExpr.map { it.toField(input) } + aggregateExpr.map { it.toField(input) })
     }
 
     override fun children(): List<LogicalPlan> {

@@ -18,13 +18,13 @@ import java.io.FileNotFoundException
 
 class CsvDataSource(
     val filename: String,
-    val schema: Schema?,
+    val schema: KQuerySchema?,
     private val hasHeaders: Boolean,
     private val batchSize: Int
 ) : DataSource {
-    private val finalSchema: Schema by lazy { schema ?: inferSchema() }
+    private val finalSchema: KQuerySchema by lazy { schema ?: inferSchema() }
 
-    override fun schema(): Schema {
+    override fun schema(): KQuerySchema {
         return finalSchema
     }
 
@@ -57,7 +57,7 @@ class CsvDataSource(
         return ReaderAsSequence(readSchema, parser, batchSize)
     }
 
-    private fun inferSchema(): Schema {
+    private fun inferSchema(): KQuerySchema {
         val file = File(filename)
         if (!file.exists()) {
             throw FileNotFoundException(file.absolutePath)
@@ -73,9 +73,9 @@ class CsvDataSource(
 
             val schema =
                 if (hasHeaders) {
-                    Schema(headers.map { colName -> Field(colName, ArrowTypes.StringType) })
+                    KQuerySchema(headers.map { colName -> KQueryField(colName, ArrowTypes.StringType) })
                 } else {
-                    Schema(List(headers.size) { i -> Field("field_${i + 1}", ArrowTypes.StringType) })
+                    KQuerySchema(List(headers.size) { i -> KQueryField("field_${i + 1}", ArrowTypes.StringType) })
                 }
 
             parser.stopParsing()
@@ -98,7 +98,7 @@ class CsvDataSource(
     }
 
     class ReaderAsSequence(
-        private val schema: Schema, private val parser: CsvParser, private val batchSize: Int
+        private val schema: KQuerySchema, private val parser: CsvParser, private val batchSize: Int
     ) : Sequence<RecordBatch> {
         override fun iterator(): Iterator<RecordBatch> {
             return ReaderIterator(schema, parser, batchSize)
@@ -106,7 +106,7 @@ class CsvDataSource(
     }
 
     class ReaderIterator(
-        private val schema: Schema, private val parser: CsvParser, private val batchSize: Int
+        private val schema: KQuerySchema, private val parser: CsvParser, private val batchSize: Int
     ) : Iterator<RecordBatch> {
         private var next: RecordBatch? = null
         private var started: Boolean = false

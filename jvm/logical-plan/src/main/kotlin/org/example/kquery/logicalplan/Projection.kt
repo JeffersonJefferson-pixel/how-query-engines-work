@@ -1,6 +1,6 @@
 package org.example.kquery.logicalplan
 
-import org.example.kquery.datatypes.Schema
+import org.example.kquery.datatypes.KQuerySchema
 
 /**
  * Projection logical plan applies a projection to its input.
@@ -10,8 +10,8 @@ class Projection(
     val input: LogicalPlan,
     val expr: List<LogicalExpr>
 ): LogicalPlan {
-    override fun schema(): Schema {
-        return Schema(expr.map { it.toField(input) })
+    override fun schema(): KQuerySchema {
+        return KQuerySchema(expr.map { it.toField(input) })
     }
 
     override fun children(): List<LogicalPlan> {

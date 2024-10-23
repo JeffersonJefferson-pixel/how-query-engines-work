@@ -1,6 +1,6 @@
 package org.example.kquery.datatypes
 
-class RecordBatch(val schema: Schema, private val fields: List<ColumnVector>) {
+class RecordBatch(val schema: KQuerySchema, private val fields: List<ColumnVector>) {
     fun rowCount() = fields.first().size()
 
     fun columnCount() = fields.size

@@ -1,15 +1,24 @@
 package org.example.kquery.datatypes
 
 import org.apache.arrow.vector.types.pojo.ArrowType
+import org.apache.arrow.vector.types.pojo.Field
 import org.apache.arrow.vector.types.pojo.FieldType
+import org.apache.arrow.vector.types.pojo.Schema
 
-data class Schema(val fields: List<Field>) {
-    fun toArrow(): org.apache.arrow.vector.types.pojo.Schema {
-        return org.apache.arrow.vector.types.pojo.Schema(fields.map { it.toArrow() })
+object KQuerySchemaConverter {
+    fun fromArrow(arrowSchema: Schema) : KQuerySchema {
+        val fields = arrowSchema.fields.map {  KQueryField(it.name, it.fieldType.type) }
+        return KQuerySchema(fields)
+    }
+}
+
+data class KQuerySchema(val fields: List<KQueryField>) {
+    fun toArrow(): Schema {
+        return Schema(fields.map { it.toArrow() })
     }
 
-    fun select(names: List<String>) : Schema {
-        val f = mutableListOf<Field>()
+    fun select(names: List<String>) : KQuerySchema {
+        val f = mutableListOf<KQueryField>()
         names.forEach { name ->
             val m = fields.filter { it.name == name }
             if (m.size == 1) {
@@ -18,13 +27,13 @@ data class Schema(val fields: List<Field>) {
                 throw IllegalArgumentException()
             }
         }
-        return Schema(f)
+        return KQuerySchema(f)
     }
 }
 
-data class Field(val name: String, val dataType: ArrowType) {
-    fun toArrow(): org.apache.arrow.vector.types.pojo.Field {
+data class KQueryField(val name: String, val dataType: ArrowType) {
+    fun toArrow(): Field {
         val fieldType = FieldType(true, dataType, null)
-        return org.apache.arrow.vector.types.pojo.Field(name, fieldType, listOf())
+        return Field(name, fieldType, listOf())
     }
 }

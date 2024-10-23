@@ -1,6 +1,6 @@
 package org.example.kquery.logicalplan
 
-import org.example.kquery.datatypes.Schema
+import org.example.kquery.datatypes.KQuerySchema
 
 interface DataFrame {
     fun project(expr: List<LogicalExpr>): DataFrame
@@ -10,7 +10,7 @@ interface DataFrame {
     fun aggregate(groupBy: List<LogicalExpr>,
                   aggregateExpr: List<AggregateExpr>): DataFrame
 
-    fun schema(): Schema
+    fun schema(): KQuerySchema
 
     fun logicalPlan(): LogicalPlan
 }
@@ -29,7 +29,7 @@ class DataFrameImpl(private val plan: LogicalPlan) : DataFrame {
         return DataFrameImpl(Aggregate(plan, groupBy, aggregateExpr))
     }
 
-    override fun schema(): Schema {
+    override fun schema(): KQuerySchema {
         return plan.schema()
     }
 

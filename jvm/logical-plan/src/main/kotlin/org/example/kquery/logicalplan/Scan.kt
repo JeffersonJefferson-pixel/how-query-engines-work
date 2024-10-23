@@ -1,7 +1,7 @@
 package org.example.kquery.logicalplan
 
 import org.example.kquery.datasource.DataSource
-import org.example.kquery.datatypes.Schema
+import org.example.kquery.datatypes.KQuerySchema
 
 /** Scan logical plan represents fetching data from a Data source.
  * It does not have another logical plan as an input.
@@ -14,11 +14,11 @@ class Scan(
 ): LogicalPlan {
     val schema = deriveSchema()
 
-    override fun schema(): Schema {
+    override fun schema(): KQuerySchema {
         return schema
     }
 
-    private fun deriveSchema(): Schema {
+    private fun deriveSchema(): KQuerySchema {
         val schema = dataSource.schema()
         if (projection.isEmpty()) {
             return schema

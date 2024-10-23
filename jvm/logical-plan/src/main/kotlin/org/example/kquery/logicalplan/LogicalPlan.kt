@@ -1,6 +1,6 @@
 package org.example.kquery.logicalplan
 
-import org.example.kquery.datatypes.Schema
+import org.example.kquery.datatypes.KQuerySchema
 
 /**
  * A logical plan represents a relation with a known schema.
@@ -8,7 +8,7 @@ import org.example.kquery.datatypes.Schema
  */
 interface LogicalPlan {
     /** Returns schema that will be produced by this logical plan. */
-    fun schema(): Schema
+    fun schema(): KQuerySchema
     /** Returns the children (inputs) of this logical plan. */
     fun children(): List<LogicalPlan>
 }
