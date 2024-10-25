@@ -3,6 +3,9 @@ package org.example.kquery.datatypes
 import org.apache.arrow.vector.types.pojo.ArrowType
 import java.lang.IndexOutOfBoundsException
 
+/**
+ * LiteralValueVector provides the same value for every index in a column.
+ */
 class LiteralValueVector(
     private val arrowType: ArrowType,
     private val value: Any?,

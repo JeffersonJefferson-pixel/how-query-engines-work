@@ -1,8 +1,32 @@
 package org.example.kquery.datatypes
 
+import org.apache.arrow.memory.RootAllocator
 import org.apache.arrow.vector.*
 import org.example.kquery.datatypes.ColumnVector
 import org.apache.arrow.vector.types.pojo.ArrowType
+
+object FieldVectorFactory {
+    fun create(arrowType: ArrowType, initialCapacity: Int): FieldVector {
+        val rootAllocator = RootAllocator(Long.MAX_VALUE)
+        val fieldVector : FieldVector =
+            when (arrowType) {
+                ArrowTypes.BooleanType -> BitVector("v", rootAllocator)
+                ArrowTypes.Int8Type -> TinyIntVector("v", rootAllocator)
+                ArrowTypes.Int16Type -> SmallIntVector("v", rootAllocator)
+                ArrowTypes.Int32Type -> IntVector("v", rootAllocator)
+                ArrowTypes.Int64Type -> BigIntVector("v", rootAllocator)
+                ArrowTypes.FloatType -> Float4Vector("v", rootAllocator)
+                ArrowTypes.DoubleType -> Float8Vector("v", rootAllocator)
+                ArrowTypes.StringType -> VarCharVector("v", rootAllocator)
+                else -> throw IllegalStateException()
+            }
+        if (initialCapacity > 0) {
+            fieldVector.setInitialCapacity(initialCapacity)
+        }
+        fieldVector.allocateNew()
+        return fieldVector
+    }
+}
 
 class ArrowFieldVector(private val field: FieldVector) : ColumnVector {
     override fun getType(): ArrowType {

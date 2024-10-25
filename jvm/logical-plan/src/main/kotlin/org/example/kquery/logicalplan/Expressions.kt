@@ -1,5 +1,6 @@
 package org.example.kquery.logicalplan
 
+import org.apache.arrow.vector.types.pojo.ArrowType
 import org.example.kquery.datatypes.ArrowTypes
 import org.example.kquery.datatypes.KQueryField
 import java.sql.SQLException
@@ -42,6 +43,16 @@ class LiteralLong(val n: Long): LogicalExpr {
     }
 }
 
+class CastExpression(val expr: LogicalExpr, val dataType: ArrowType): LogicalExpr {
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(expr.toField(input).name, dataType)
+    }
+
+    override fun toString(): String {
+        return "CAST($expr AS $dataType)"
+    }
+}
+
 /** Binary expressions are expressions that take two inputs.
  * There are Comparison expression, Boolean expression, and Math expression.
  */
@@ -53,6 +64,18 @@ abstract class BinaryExpr(
 ): LogicalExpr {
     override fun toString(): String {
         return "$l $op $r"
+    }
+}
+
+abstract class UnaryExpr(val name: String, val op: String, val expr: LogicalExpr): LogicalExpr {
+   override fun toString(): String {
+       return "$op $expr"
+   }
+}
+
+class Not(expr: LogicalExpr): UnaryExpr("not", "NOT", expr) {
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(name, ArrowTypes.BooleanType)
     }
 }
 
