@@ -50,6 +50,50 @@ class ArrowVectorBuilder(val fieldVector: FieldVector) {
                     throw IllegalStateException()
                 }
             }
+            is UInt1Vector -> {
+                if (value == null) {
+                    fieldVector.setNull(i)
+                } else if (value is Number) {
+                    fieldVector.set(i, value.toInt())
+                } else if (value is String) {
+                    fieldVector.set(i, value.toInt())
+                } else {
+                    throw IllegalStateException()
+                }
+            }
+            is UInt2Vector -> {
+                if (value == null) {
+                    fieldVector.setNull(i)
+                } else if (value is Number) {
+                    fieldVector.set(i, value.toInt())
+                } else if (value is String) {
+                    fieldVector.set(i, value.toInt())
+                } else {
+                    throw IllegalStateException()
+                }
+            }
+            is UInt4Vector -> {
+                if (value == null) {
+                    fieldVector.setNull(i)
+                } else if (value is Number) {
+                    fieldVector.set(i, value.toInt())
+                } else if (value is String) {
+                    fieldVector.set(i, value.toInt())
+                } else {
+                    throw IllegalStateException()
+                }
+            }
+            is UInt8Vector -> {
+                if (value == null) {
+                    fieldVector.setNull(i)
+                } else if (value is Number) {
+                    fieldVector.set(i, value.toLong())
+                } else if (value is String) {
+                    fieldVector.set(i, value.toLong())
+                } else {
+                    throw IllegalStateException()
+                }
+            }
             is Float4Vector -> {
                 if (value == null) {
                     fieldVector.setNull(i)
