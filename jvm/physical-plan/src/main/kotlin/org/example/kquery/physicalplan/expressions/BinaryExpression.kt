@@ -1,4 +1,4 @@
-package org.example.kquery.expressions
+package org.example.kquery.physicalplan.expressions
 
 import org.example.kquery.datatypes.ColumnVector
 import org.example.kquery.datatypes.RecordBatch

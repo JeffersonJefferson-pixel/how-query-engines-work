@@ -1,4 +1,4 @@
-package org.example.kquery
+package org.example.kquery.physicalplan
 
 import org.example.kquery.datatypes.KQuerySchema
 import org.example.kquery.datatypes.RecordBatch

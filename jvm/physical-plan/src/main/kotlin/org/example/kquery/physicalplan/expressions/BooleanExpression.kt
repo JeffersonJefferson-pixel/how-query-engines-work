@@ -1,4 +1,4 @@
-package org.example.kquery.expressions
+package org.example.kquery.physicalplan.expressions
 
 import org.apache.arrow.memory.RootAllocator
 import org.apache.arrow.vector.BitVector

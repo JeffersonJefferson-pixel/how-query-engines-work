@@ -1,4 +1,4 @@
-package org.example.kquery.expressions
+package org.example.kquery.physicalplan.expressions
 
 import org.apache.arrow.vector.types.pojo.ArrowType
 import org.example.kquery.datatypes.ArrowTypes

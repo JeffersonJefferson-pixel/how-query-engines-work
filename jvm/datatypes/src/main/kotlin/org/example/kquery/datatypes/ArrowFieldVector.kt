@@ -28,7 +28,7 @@ object FieldVectorFactory {
     }
 }
 
-class ArrowFieldVector(private val field: FieldVector) : ColumnVector {
+class ArrowFieldVector(val field: FieldVector) : ColumnVector {
     override fun getType(): ArrowType {
         return when (field) {
             is BitVector -> ArrowTypes.BooleanType

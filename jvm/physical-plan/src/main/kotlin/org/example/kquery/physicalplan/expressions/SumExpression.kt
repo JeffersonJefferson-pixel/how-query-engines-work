@@ -1,4 +1,4 @@
-package org.example.kquery.expressions
+package org.example.kquery.physicalplan.expressions
 
 class SumExpression(private val expr: Expression) : AggregateExpression {
     override fun inputExpression(): Expression {
