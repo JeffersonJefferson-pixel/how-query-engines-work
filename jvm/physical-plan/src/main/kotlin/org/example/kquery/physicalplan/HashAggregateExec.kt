@@ -86,4 +86,8 @@ class HashAggregateExec(
         return listOf(input)
     }
 
+    override fun toString(): String {
+        return "HashAggregateExec: groupExpr=$groupExpr, aggrExpr=$aggregateExpr"
+    }
+
 }

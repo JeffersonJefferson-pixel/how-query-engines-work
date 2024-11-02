@@ -43,6 +43,16 @@ class LiteralLong(val n: Long): LogicalExpr {
     }
 }
 
+class LiteralDouble(val n: Double): LogicalExpr {
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(n.toString(), ArrowTypes.DoubleType);
+    }
+
+    override fun toString(): String {
+        return n.toString()
+    }
+}
+
 class CastExpression(val expr: LogicalExpr, val dataType: ArrowType): LogicalExpr {
     override fun toField(input: LogicalPlan): KQueryField {
         return KQueryField(expr.toField(input).name, dataType)
@@ -106,7 +116,7 @@ class GtEq(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("gteq", ">=", l, 
 
 class Lt(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("lt", "<", l, r)
 
-class Lte(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("lteq", "<=", l, r)
+class LtEq(l: LogicalExpr, r: LogicalExpr) : BooleanBinaryExpr("lteq", "<=", l, r)
 
 infix fun LogicalExpr.eq(rhs: LogicalExpr): LogicalExpr {
     return Eq(this, rhs)
@@ -160,6 +170,9 @@ class Sum(input: LogicalExpr) : AggregateExpr("SUM", input)
 class Min(input: LogicalExpr) : AggregateExpr("MIN", input)
 class Max(input: LogicalExpr) : AggregateExpr("MAX", input)
 class Avg(input: LogicalExpr) : AggregateExpr("AVG", input)
+
+
+fun max(expr: LogicalExpr) = Max(expr)
 
 class Count(input: LogicalExpr) : AggregateExpr("COUNT", input) {
     override fun toField(input: LogicalPlan): KQueryField {

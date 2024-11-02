@@ -8,7 +8,7 @@ import org.example.kquery.datatypes.KQuerySchema
 class Aggregate(
     val input: LogicalPlan,
     val groupExpr: List<LogicalExpr>,
-    val aggregateExpr: List<LogicalExpr>
+    val aggregateExpr: List<AggregateExpr>
 ): LogicalPlan {
     override fun schema(): KQuerySchema {
         return KQuerySchema(groupExpr.map { it.toField(input) } + aggregateExpr.map { it.toField(input) })
