@@ -11,6 +11,10 @@ interface LogicalPlan {
     fun schema(): KQuerySchema
     /** Returns the children (inputs) of this logical plan. */
     fun children(): List<LogicalPlan>
+
+    fun pretty(): String {
+        return format(this)
+    }
 }
 
 /** Format logical plan in human-readable form. */

@@ -19,6 +19,18 @@ class Column(val name: String): LogicalExpr {
 
 fun col(name: String) = Column(name)
 
+/** Logical expression representing a reference to a column by index. */
+class ColumnIndex(val i: Int) : LogicalExpr {
+    override fun toField(input: LogicalPlan): KQueryField {
+        return input.schema().fields[i]
+    }
+
+    override fun toString(): String {
+        return "#$i"
+    }
+
+}
+
 // Literal Expressions.
 
 class LiteralString(val str: String): LogicalExpr {
@@ -150,6 +162,13 @@ class Multiply(l: LogicalExpr, r: LogicalExpr) : MathExpr("mult", "*", l, r)
 class Divide(l: LogicalExpr, r: LogicalExpr) : MathExpr("div", "/", l, r)
 
 class Modulus(l: LogicalExpr, r: LogicalExpr) : MathExpr("mod","%", l, r)
+
+// Alias expression
+class Alias(val expr: LogicalExpr, val alias: String) : LogicalExpr {
+    override fun toField(input: LogicalPlan): KQueryField {
+        return KQueryField(alias, expr.toField(input).dataType)
+    }
+}
 
 // Aggregate Expressions
 
