@@ -65,7 +65,7 @@ class LiteralDouble(val n: Double): LogicalExpr {
     }
 }
 
-class CastExpression(val expr: LogicalExpr, val dataType: ArrowType): LogicalExpr {
+class CastExpr(val expr: LogicalExpr, val dataType: ArrowType): LogicalExpr {
     override fun toField(input: LogicalPlan): KQueryField {
         return KQueryField(expr.toField(input).name, dataType)
     }
@@ -74,6 +74,8 @@ class CastExpression(val expr: LogicalExpr, val dataType: ArrowType): LogicalExp
         return "CAST($expr AS $dataType)"
     }
 }
+
+fun cast(expr: LogicalExpr, dataType: ArrowType) = CastExpr(expr, dataType)
 
 /** Binary expressions are expressions that take two inputs.
  * There are Comparison expression, Boolean expression, and Math expression.

@@ -29,7 +29,7 @@ fun extractColumns(expr: LogicalExpr, input: LogicalPlan, accum: MutableSet<Stri
             extractColumns(expr.r, input, accum)
         }
         is Alias -> extractColumns(expr.expr, input, accum)
-        is CastExpression -> extractColumns(expr.expr, input, accum)
+        is CastExpr -> extractColumns(expr.expr, input, accum)
         is LiteralString -> {}
         is LiteralLong -> {}
         is LiteralDouble -> {}

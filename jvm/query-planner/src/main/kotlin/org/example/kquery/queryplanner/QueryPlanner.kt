@@ -64,6 +64,7 @@ class QueryPlanner {
                 }
                 ColumnExpression(i)
             }
+            is CastExpr -> CastExpression(createPhysicalPlan(expr.expr, input), expr.dataType)
             is BinaryExpr -> {
                 // create physical plan for left and right expression.
                 val l = createPhysicalPlan(expr.l, input)

@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm")
+    id("java")
 }
 
 group = "org.example.kquery"
@@ -10,14 +10,15 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":execution"))
     implementation(project(":logical-plan"))
     implementation(project(":datatypes"))
-    implementation(project(":datasource"))
     implementation(project(":optimizer"))
-    implementation(project(":query-planner"))
-    implementation(project(":physical-plan"))
 
-    testImplementation(kotlin("test"))
+    implementation("org.apache.arrow:arrow-vector:0.17.0")
+
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
 }
 
 tasks.test {
