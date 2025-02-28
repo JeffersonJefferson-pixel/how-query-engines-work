@@ -20,4 +20,14 @@ class TokenStream(val tokens: List<Token>) {
             return null
         }
     }
+
+    fun consumeKeyword(s: String): Boolean {
+        val peek = peek()
+        return if (peek?.type is Keyword && peek.text == s) {
+            i++
+            true
+        } else {
+            false
+        }
+    }
 }

@@ -18,8 +18,17 @@ data class SqlString(val value: String) : SqlExpr {
     override fun toString() = "'$value'"
 }
 
+interface SqlRelation : SqlExpr
+
 /** sql long literal */
 data class SqlLong(val value: Long) : SqlExpr {
     override fun toString() = "$value"
 }
+
+/** single table query with a projection and selection. */
+data class SqlSelect(
+    val projection: List<SqlExpr>,
+    val selection: SqlExpr?,
+    val tableName: String
+) : SqlRelation
 

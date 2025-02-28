@@ -1,6 +1,5 @@
 package org.example.kquery.sql
 
-import jdk.incubator.foreign.SymbolLookup
 import java.sql.SQLException
 
 /** implementation of a Pratt Parser for sql */
@@ -18,6 +17,11 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
     override fun parsePrefix(): SqlExpr? {
         val token = tokens.next() ?: return null
         return when (token.type) {
+            // keywords
+            Keyword.SELECT -> parseSelect()
+
+            // literals
+            Literal.IDENTIFIER -> SqlIdentifier(token.text)
             Literal.LONG -> SqlLong(token.text.toLong())
             else -> throw IllegalStateException("Unexpected token $token")
         }
@@ -34,4 +38,37 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
             else -> throw IllegalStateException("Unexpected infix token $token")
         }
     }
+
+    private fun parseSelect(): SqlSelect {
+        val projection = parseExprList()
+
+        if (tokens.consumeKeyword("FROM")) {
+            val table = parseExpr() as SqlIdentifier
+
+            return SqlSelect(projection, null, table.id)
+        } else {
+            throw IllegalStateException("Expected FROM keyword, found ${tokens.peek()}")
+        }
+    }
+
+    private fun parseExprList(): List<SqlExpr> {
+        val list = mutableListOf<SqlExpr>()
+        var expr = parseExpr()
+        // loop until end of expression list.
+        while (expr != null) {
+            list.add(expr)
+            // check for comma.
+            if (tokens.peek()?.type == Symbol.COMMA) {
+                tokens.next()
+            } else {
+                break
+            }
+            // parse expression.
+            expr = parseExpr()
+        }
+
+        return list
+    }
+
+    private fun parseExpr() = parse(0)
 }

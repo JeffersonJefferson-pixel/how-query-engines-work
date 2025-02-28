@@ -25,19 +25,35 @@ enum class Literal : TokenType {
 }
 
 enum class Keyword : TokenType {
-    SCHEMA;
+    SCHEMA,
+    SELECT,
+    FROM;
 
     companion object {
-        private val keywords = entries.associateBy(Keyword::name)
+        private val keywords = values().associateBy(Keyword::name)
         fun textOf(text: String) = keywords[text.uppercase()]
     }
 }
 
 enum class Symbol(val text: String) : TokenType {
+    COMMA(","),
     PLUS("+"),
     SUB("-"),
     STAR("*"),
     SLASH("/");
+
+    companion object {
+        private val symbols = values().associateBy(Symbol::text)
+        private val symbolStartSet = values().flatMap { it.text.toList() }.toSet()
+        fun textOf(text: String) = symbols[text]
+        fun isSymbol(ch: Char): Boolean {
+            return symbolStartSet.contains(ch)
+        }
+
+        fun isSymbolStart(ch: Char): Boolean {
+            return isSymbol(ch)
+        }
+    }
 }
 
 data class Token(
