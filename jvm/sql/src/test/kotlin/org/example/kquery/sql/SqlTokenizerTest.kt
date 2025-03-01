@@ -20,4 +20,23 @@ class SqlTokenizerTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `tokenize SELECT with WHERE`() {
+        val expected = listOf(
+            Token("SELECT", Keyword.SELECT, 6),
+            Token("a", Literal.IDENTIFIER, 8),
+            Token(",",  Symbol.COMMA, 9),
+            Token("b", Literal.IDENTIFIER, 11),
+            Token("FROM", Keyword.FROM, 16),
+            Token("employee", Literal.IDENTIFIER, 25),
+            Token("WHERE", Keyword.WHERE, 31),
+            Token("state", Literal.IDENTIFIER, 37),
+            Token("=", Symbol.EQ, 39),
+            Token("CO", Literal.STRING,  44)
+        )
+        val actual = SqlTokenizer("SELECT a, b FROM employee WHERE state = 'CO'").tokenize().tokens
+
+        assertEquals(expected, actual)
+    }
 }

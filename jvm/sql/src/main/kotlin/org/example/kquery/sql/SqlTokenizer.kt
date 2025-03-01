@@ -33,6 +33,10 @@ class SqlTokenizer(val sql: String) {
                 token = scanSymbol(offset)
                 offset = token.endOffset
             }
+            Literal.isCharsStart(sql[offset]) -> {
+                token = scanChars(offset, sql[offset])
+                offset = token.endOffset
+            }
         }
         return token
     }
@@ -67,6 +71,17 @@ class SqlTokenizer(val sql: String) {
             text = sql.substring(offset, --endOffset)
         }
         return Token(text, symbol ?: throw TokenizeException("$text must be a Symbol!"), endOffset)
+    }
+
+    private fun scanChars(startOffset: Int, terminatedChar: Char): Token {
+        val endOffset = getOffsetUntilTerminatedChar(terminatedChar, startOffset + 1)
+        return Token(sql.substring(startOffset + 1, endOffset), Literal.STRING, endOffset + 1)
+    }
+
+    private fun getOffsetUntilTerminatedChar(terminatedChar: Char, startOffset: Int): Int {
+        val offset = sql.indexOf(terminatedChar, startOffset)
+        return if (offset != -1) offset else
+            throw TokenizeException("Must contain $terminatedChar in remain sql[$startOffset .. end]")
     }
 
     private inline fun CharSequence.indexOfFirst(startIndex: Int = 0, predicate: (Char) -> Boolean): Int {

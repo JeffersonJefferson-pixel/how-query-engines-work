@@ -53,6 +53,7 @@ class SqlPlanner {
                     Symbol.SUB.text -> Subtract(l, r)
                     Symbol.STAR.text -> Multiply(l, r)
                     Symbol.SLASH.text -> Divide(l, r)
+                    Symbol.EQ.text -> Eq(l, r)
                     else -> throw SQLException("Invalid operator ${expr.op}")
                 }
             }

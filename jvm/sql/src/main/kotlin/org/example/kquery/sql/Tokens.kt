@@ -21,13 +21,17 @@ enum class Literal : TokenType {
             return ch.isLetter() || ch.isDigit() || ch == '_'
         }
 
+        fun isCharsStart(ch: Char): Boolean {
+            return '\'' == ch || '"' == ch
+        }
     }
 }
 
 enum class Keyword : TokenType {
     SCHEMA,
     SELECT,
-    FROM;
+    FROM,
+    WHERE;
 
     companion object {
         private val keywords = values().associateBy(Keyword::name)
@@ -40,7 +44,8 @@ enum class Symbol(val text: String) : TokenType {
     PLUS("+"),
     SUB("-"),
     STAR("*"),
-    SLASH("/");
+    SLASH("/"),
+    EQ("=");
 
     companion object {
         private val symbols = values().associateBy(Symbol::text)

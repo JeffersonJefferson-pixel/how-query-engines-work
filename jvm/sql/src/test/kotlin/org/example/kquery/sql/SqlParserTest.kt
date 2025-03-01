@@ -21,6 +21,17 @@ class SqlParserTest {
             select.projection)
     }
 
+    @Test
+    fun `parse SELECT with WHERE`() {
+        val select = parseSelect("SELECT id, first_name, last_name FROM employee WHERE state = 'CO'")
+        assertEquals(
+            listOf(SqlIdentifier("id"), SqlIdentifier("first_name"), SqlIdentifier("last_name")),
+            select.projection
+        )
+        assertEquals(SqlBinaryExpr(SqlIdentifier("state"), "=", SqlString("CO")), select.selection)
+        assertEquals("employee", select.tableName)
+    }
+
     private fun parseSelect(sql: String): SqlSelect {
         return parse(sql) as SqlSelect
     }

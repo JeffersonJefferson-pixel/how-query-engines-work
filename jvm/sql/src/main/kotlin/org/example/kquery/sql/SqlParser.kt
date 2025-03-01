@@ -8,6 +8,8 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
         val token = tokens.peek() ?: return 0
         return when (token.type) {
             // math symbols
+            Symbol.EQ -> 40
+
             Symbol.PLUS, Symbol.SUB -> 50
             Symbol.STAR, Symbol.SLASH -> 60
             else -> 0
@@ -23,6 +25,7 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
             // literals
             Literal.IDENTIFIER -> SqlIdentifier(token.text)
             Literal.LONG -> SqlLong(token.text.toLong())
+            Literal.STRING -> SqlString(token.text)
             else -> throw IllegalStateException("Unexpected token $token")
         }
     }
@@ -31,7 +34,8 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
         val token = tokens.peek()!!
         return when (token.type) {
             // math symbols
-            Symbol.PLUS, Symbol.SUB, Symbol.STAR, Symbol.SLASH -> {
+            Symbol.PLUS, Symbol.SUB, Symbol.STAR, Symbol.SLASH,
+            Symbol.EQ -> {
                 tokens.next()
                 SqlBinaryExpr(left, token.text, parse(precedence) ?: throw SQLException("Error parsing infix"))
             }
@@ -42,10 +46,16 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
     private fun parseSelect(): SqlSelect {
         val projection = parseExprList()
 
-        if (tokens.consumeKeyword("FROM")) {
+        if (tokens.consumeKeyword(Keyword.FROM.name)) {
             val table = parseExpr() as SqlIdentifier
 
-            return SqlSelect(projection, null, table.id)
+            // where clause
+            var selection : SqlExpr? = null
+            if (tokens.consumeKeyword(Keyword.WHERE.name)) {
+                selection = parseExpr()
+            }
+
+            return SqlSelect(projection, selection, table.id)
         } else {
             throw IllegalStateException("Expected FROM keyword, found ${tokens.peek()}")
         }
