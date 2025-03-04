@@ -12,32 +12,19 @@ class SqlPlanner {
         // convert sql projection to logical projection
         val projectionExpr = select.projection.map { createLogicalExpr(it, df) }
 
-        if (select.selection == null) {
-            return df.project(projectionExpr)
+        val aggregateExprCount = projectionExpr.count { isAggregateExpr(it) }
+        if (aggregateExprCount == 0 && select.groupBy.isNotEmpty()) {
+            throw SQLException("GROUP BY without aggregate expressions is not supported")
         }
 
-        // create logical filter expression
-        val filterExpr = createLogicalExpr(select.selection, df)
+        var plan = df
 
-        val columnsInProjection = projectionExpr.map { it.toField(df.logicalPlan()).name }
-            .toSet()
-
-        val columnNames = mutableSetOf<String>()
-        visit(filterExpr, columnNames)
-
-        val missing = columnNames - columnsInProjection
-
-        if (missing.isEmpty()) {
-            return df.project(projectionExpr)
-                .filter(filterExpr)
+        if (aggregateExprCount == 0) {
+            return planNonAggregatedQuery(select, df, projectionExpr)
+        } else {
+            plan = planAggregatedQuery(select, plan, projectionExpr)
         }
-
-        // add filter columns to projection, then filter, then project only required columns
-        return df.project(projectionExpr + missing.map { Column(it) })
-            .filter(filterExpr)
-            .project(projectionExpr.map {
-                Column(it.toField(df.logicalPlan()).name)
-            })
+        return plan
     }
 
     private fun createLogicalExpr(expr: SqlExpr, input: DataFrame) : LogicalExpr {
@@ -57,9 +44,135 @@ class SqlPlanner {
                     else -> throw SQLException("Invalid operator ${expr.op}")
                 }
             }
-
+            is SqlFunction ->
+                when (expr.id) {
+                    Keyword.MAX.name -> {
+                        return Max(createLogicalExpr(expr.args.first(), input))
+                    }
+                    else -> throw SQLException("Invalid aggregate function $expr")
+                }
             else -> throw UnsupportedOperationException()
         }
+    }
+
+    private fun planNonAggregatedQuery(
+        select: SqlSelect,
+        df: DataFrame,
+        projectionExpr: List<LogicalExpr>
+    ): DataFrame {
+        var plan = df
+
+        if (select.selection != null) {
+            // handle case with selection
+            val columnNamesInSelection = getReferencedColumnsBySelection(select, df)
+
+            val columnNamesInProjection = getReferencedColumns(projectionExpr)
+
+            val missing = (columnNamesInSelection - columnNamesInProjection)
+
+            plan = planProjectAndFilter(select, plan, projectionExpr, missing)
+
+            if (missing.isNotEmpty()) {
+                // handle case with missing
+                val n = projectionExpr.size
+                // drop column that are added from selection
+                val expr = (0 until n).map { i -> Column(plan.schema().fields[i].name) }
+                plan = plan.project(expr)
+            }
+        } else {
+            plan = plan.project(projectionExpr)
+        }
+
+        return plan
+    }
+
+    private fun planAggregatedQuery(
+        select: SqlSelect,
+        df: DataFrame,
+        projectionExpr: List<LogicalExpr>
+    ): DataFrame {
+        val projection = mutableListOf<LogicalExpr>()
+        val aggregateExpr = mutableListOf<AggregateExpr>()
+        val numGroupCols = select.groupBy.size
+        var groupCount = 0
+
+        // loop projection expression
+        projectionExpr.forEach { expr ->
+            when (expr) {
+                // handle aggregate in projection
+                is AggregateExpr -> {
+                    projection.add(ColumnIndex(numGroupCols + aggregateExpr.size))
+                    aggregateExpr.add(expr)
+                }
+                // expression other than aggregate must be column in group by
+                else -> {
+                    projection.add(ColumnIndex(groupCount))
+                    groupCount += 1
+                }
+            }
+        }
+
+        var plan = df
+        val projectionWithoutAggregates = projectionExpr.filterNot { it is AggregateExpr}
+
+        if (select.selection != null) {
+            // handle case with selection
+            val columnNamesInSelection = getReferencedColumnsBySelection(select, df)
+
+            val columnNamesInProjection = getReferencedColumns(projectionExpr)
+
+            val missing = (columnNamesInSelection - columnNamesInProjection)
+
+            plan = planProjectAndFilter(select, plan, projectionWithoutAggregates, missing)
+        }
+
+        val groupByExpr = select.groupBy.map {createLogicalExpr(it, plan)}
+        plan = plan.aggregate(groupByExpr, aggregateExpr)
+
+        return plan.project(projection)
+    }
+
+    private fun planProjectAndFilter(
+        select: SqlSelect,
+        df: DataFrame,
+        projectionExpr: List<LogicalExpr>,
+        missing: Set<String>
+    ): DataFrame {
+        // only for sql select with selection
+        var plan = df
+
+        if (missing.isEmpty()) {
+            // projection and selection have same set of columns
+            plan = plan.project(projectionExpr)
+            plan = plan.filter(createLogicalExpr(select.selection!!, plan))
+        } else {
+            // project with column in selection that are missing in original projection
+            plan = plan.project(projectionExpr + missing.map { Column(it) })
+            plan = plan.filter(createLogicalExpr(select.selection!!, plan))
+        }
+
+        return plan
+    }
+
+    private fun getReferencedColumnsBySelection(select: SqlSelect, table: DataFrame): Set<String> {
+        val accumulator = mutableSetOf<String>()
+        if (select.selection != null) {
+            val filterExpr = createLogicalExpr(select.selection, table)
+            visit(filterExpr, accumulator)
+            val validColumnNames = table.schema().fields.map { it.name }
+            accumulator.removeIf { name -> !validColumnNames.contains(name) }
+        }
+        return accumulator
+    }
+
+    private fun getReferencedColumns(exprs: List<LogicalExpr>): Set<String> {
+        val accumulator = mutableSetOf<String>()
+        exprs.forEach { visit(it, accumulator) }
+        return accumulator
+    }
+
+    private fun isAggregateExpr(expr: LogicalExpr): Boolean {
+        return expr is AggregateExpr
     }
 
     private fun visit(expr: LogicalExpr, accumulator: MutableSet<String>) {
@@ -70,6 +183,7 @@ class SqlPlanner {
                 visit(expr.l, accumulator)
                 visit(expr.r, accumulator)
             }
+            is AggregateExpr -> visit(expr.expr, accumulator)
         }
     }
 }

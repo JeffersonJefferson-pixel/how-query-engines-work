@@ -21,9 +21,31 @@ class TokenStream(val tokens: List<Token>) {
         }
     }
 
-    fun consumeKeyword(s: String): Boolean {
+    fun consumeKeyword(k: Keyword): Boolean {
         val peek = peek()
-        return if (peek?.type is Keyword && peek.text == s) {
+        return if (peek?.type == k) {
+            i++
+            true
+        } else {
+            false
+        }
+    }
+
+    fun consumeKeywords(keywords: List<Keyword>): Boolean {
+        val save = i
+        for (k in keywords) {
+            if (!consumeKeyword(k)) {
+                i = save
+                return false
+            }
+        }
+
+        return true
+    }
+
+    fun consumeSymbol(s: Symbol): Boolean {
+        val peek = peek()
+        return if (peek?.type is Symbol && peek.text == s.text) {
             i++
             true
         } else {

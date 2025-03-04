@@ -24,7 +24,9 @@ class SqlPlannerTest {
     fun `select with filter`() {
         val plan = plan("SELECT state FROM employee WHERE state = 'CA'")
         assertEquals(
-            "Selection: #state = 'CA'\n" + "\tProjection: #state\n" + "\t\tScan: ; projection=None\n",
+            "Selection: #state = 'CA'\n" +
+                    "\tProjection: #state\n" +
+                    "\t\tScan: ; projection=None\n",
             format(plan)
         )
     }
@@ -37,6 +39,17 @@ class SqlPlannerTest {
             "\tSelection: #state = 'CA'\n" +
             "\t\tProjection: #last_name, #state\n" +
             "\t\t\tScan: ; projection=None\n",
+            format(plan)
+        )
+    }
+
+    @Test
+    fun `plan aggregate query`() {
+        val plan = plan("SELECT state, MAX(salary) FROM employee GROUP BY state")
+        assertEquals(
+            "Projection: #0, #1\n" +
+            "\tAggregate: groupExpr=[#state], aggregateExpr=[MAX(#salary)]\n" +
+            "\t\tScan: ; projection=None\n",
             format(plan)
         )
     }

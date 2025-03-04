@@ -31,7 +31,10 @@ enum class Keyword : TokenType {
     SCHEMA,
     SELECT,
     FROM,
-    WHERE;
+    WHERE,
+    MAX,
+    GROUP,
+    BY;
 
     companion object {
         private val keywords = values().associateBy(Keyword::name)
@@ -45,7 +48,9 @@ enum class Symbol(val text: String) : TokenType {
     SUB("-"),
     STAR("*"),
     SLASH("/"),
-    EQ("=");
+    EQ("="),
+    LEFT_PAREN("("),
+    RIGHT_PAREN(")");
 
     companion object {
         private val symbols = values().associateBy(Symbol::text)

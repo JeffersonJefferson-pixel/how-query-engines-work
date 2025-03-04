@@ -21,6 +21,7 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
         return when (token.type) {
             // keywords
             Keyword.SELECT -> parseSelect()
+            Keyword.MAX -> parseSqlFunction(token.text)
 
             // literals
             Literal.IDENTIFIER -> SqlIdentifier(token.text)
@@ -46,18 +47,37 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
     private fun parseSelect(): SqlSelect {
         val projection = parseExprList()
 
-        if (tokens.consumeKeyword(Keyword.FROM.name)) {
+        if (tokens.consumeKeyword(Keyword.FROM)) {
             val table = parseExpr() as SqlIdentifier
 
             // where clause
-            var selection : SqlExpr? = null
-            if (tokens.consumeKeyword(Keyword.WHERE.name)) {
+            var selection: SqlExpr? = null
+            if (tokens.consumeKeyword(Keyword.WHERE)) {
                 selection = parseExpr()
             }
 
-            return SqlSelect(projection, selection, table.id)
+            // group by clause
+            var groupBy: List<SqlExpr> = listOf()
+            if (tokens.consumeKeywords(listOf(Keyword.GROUP, Keyword.BY))) {
+                groupBy = parseExprList()
+            }
+
+            return SqlSelect(projection, selection, groupBy, table.id)
         } else {
             throw IllegalStateException("Expected FROM keyword, found ${tokens.peek()}")
+        }
+    }
+
+    private fun parseSqlFunction(name: String): SqlFunction {
+        if (tokens.consumeSymbol(Symbol.LEFT_PAREN)) {
+            val args = parseExprList()
+            if (tokens.consumeSymbol(Symbol.RIGHT_PAREN)) {
+                return SqlFunction(name, args)
+            } else {
+                throw IllegalStateException("Expected RIGHT_PAREN, found ${tokens.peek()}")
+            }
+        } else {
+            throw IllegalStateException("Expect LEFT PAREN symbol, found ${tokens.peek()}")
         }
     }
 

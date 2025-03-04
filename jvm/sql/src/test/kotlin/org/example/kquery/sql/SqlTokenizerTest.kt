@@ -39,4 +39,26 @@ class SqlTokenizerTest {
 
         assertEquals(expected, actual)
     }
+
+    @Test
+    fun `tokenize SELECT with aggregates`() {
+        val expected =
+            listOf(
+                Token("SELECT", Keyword.SELECT, 6),
+                Token("state", Literal.IDENTIFIER, 12),
+                Token(",", Symbol.COMMA, 13),
+                Token("MAX", Keyword.MAX, 17),
+                Token("(", Symbol.LEFT_PAREN, 18),
+                Token("salary", Literal.IDENTIFIER, 24),
+                Token(")", Symbol.RIGHT_PAREN, 25),
+                Token("FROM", Keyword.FROM, 30),
+                Token("employee", Literal.IDENTIFIER, 39),
+                Token("GROUP", Keyword.GROUP, 45),
+                Token("BY", Keyword.BY, 48),
+                Token("state", Literal.IDENTIFIER, 54)
+            )
+        val actual = SqlTokenizer("SELECT state, MAX(salary) FROM employee GROUP BY state").tokenize().tokens
+
+        assertEquals(expected, actual)
+    }
 }

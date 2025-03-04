@@ -1,6 +1,5 @@
 package org.example.kquery.sql
 
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -31,6 +30,21 @@ class SqlParserTest {
         assertEquals(SqlBinaryExpr(SqlIdentifier("state"), "=", SqlString("CO")), select.selection)
         assertEquals("employee", select.tableName)
     }
+
+    @Test
+    fun `parse SELECT with aggregates`() {
+        val select = parseSelect("SELECT state, MAX(salary) FROM employee GROUP BY state")
+        assertEquals(
+            listOf(SqlIdentifier("state"), SqlFunction("MAX", listOf(SqlIdentifier("salary")))),
+            select.projection
+        )
+        assertEquals(
+            listOf(SqlIdentifier("state")),
+            select.groupBy
+        )
+        assertEquals("employee", select.tableName)
+    }
+
 
     private fun parseSelect(sql: String): SqlSelect {
         return parse(sql) as SqlSelect

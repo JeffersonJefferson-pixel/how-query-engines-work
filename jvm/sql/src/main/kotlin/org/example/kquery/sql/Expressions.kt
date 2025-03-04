@@ -25,10 +25,15 @@ data class SqlLong(val value: Long) : SqlExpr {
     override fun toString() = "$value"
 }
 
+data class SqlFunction(val id: String, val args: List<SqlExpr>) : SqlExpr {
+    override fun toString() = "$id(${args.joinToString(", ")})"
+}
+
 /** single table query with a projection and selection. */
 data class SqlSelect(
     val projection: List<SqlExpr>,
     val selection: SqlExpr?,
+    val groupBy: List<SqlExpr>,
     val tableName: String
 ) : SqlRelation
 
