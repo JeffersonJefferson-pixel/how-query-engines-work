@@ -52,8 +52,17 @@ class SqlTokenizer(val sql: String) {
         } else {
             sql.indexOfFirst(startOffset) {ch -> !ch.isDigit() }
         }
+        // eof
+        if (endOffset == sql.length) {
+            return Token(sql.substring(startOffset, endOffset), Literal.LONG, endOffset)
+        }
+        // floating point number
+        val isFloat = '.' == sql[endOffset]
+        if (isFloat) {
+            endOffset = sql.indexOfFirst(endOffset + 1) { ch -> !ch.isDigit() }
+        }
 
-        return Token(sql.substring(startOffset, endOffset), Literal.LONG, endOffset)
+        return Token(sql.substring(startOffset, endOffset), if (isFloat) Literal.DOUBLE else Literal.LONG, endOffset)
     }
 
     private fun scanIdentifier(startOffset: Int): Token {

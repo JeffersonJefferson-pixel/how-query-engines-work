@@ -18,6 +18,10 @@ data class SqlString(val value: String) : SqlExpr {
     override fun toString() = "'$value'"
 }
 
+data class SqlDouble(val value: Double) : SqlExpr {
+    override fun toString() = "$value"
+}
+
 interface SqlRelation : SqlExpr
 
 /** sql long literal */
@@ -29,11 +33,16 @@ data class SqlFunction(val id: String, val args: List<SqlExpr>) : SqlExpr {
     override fun toString() = "$id(${args.joinToString(", ")})"
 }
 
+data class SqlAlias(val expr: SqlExpr, val alias: SqlIdentifier) : SqlExpr
+
+data class SqlSort(val expr: SqlExpr, val asc: Boolean ) : SqlExpr
 /** single table query with a projection and selection. */
 data class SqlSelect(
     val projection: List<SqlExpr>,
     val selection: SqlExpr?,
     val groupBy: List<SqlExpr>,
+    val orderBy: List<SqlExpr>,
+    val having: SqlExpr?,
     val tableName: String
 ) : SqlRelation
 

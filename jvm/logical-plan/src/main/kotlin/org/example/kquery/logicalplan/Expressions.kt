@@ -170,6 +170,10 @@ class Alias(val expr: LogicalExpr, val alias: String) : LogicalExpr {
     override fun toField(input: LogicalPlan): KQueryField {
         return KQueryField(alias, expr.toField(input).dataType)
     }
+
+    override fun toString(): String {
+        return "$expr as $alias"
+    }
 }
 
 // Aggregate Expressions

@@ -7,8 +7,11 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
     override fun nextPrecedence(): Int {
         val token = tokens.peek() ?: return 0
         return when (token.type) {
+            // keywords
+            Keyword.AS, Keyword.ASC, Keyword.DESC -> 10
+            Keyword.AND -> 30
             // math symbols
-            Symbol.EQ -> 40
+            Symbol.EQ, Symbol.LT, Symbol.GT -> 40
 
             Symbol.PLUS, Symbol.SUB -> 50
             Symbol.STAR, Symbol.SLASH -> 60
@@ -26,6 +29,7 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
             // literals
             Literal.IDENTIFIER -> SqlIdentifier(token.text)
             Literal.LONG -> SqlLong(token.text.toLong())
+            Literal.DOUBLE -> SqlDouble(token.text.toDouble())
             Literal.STRING -> SqlString(token.text)
             else -> throw IllegalStateException("Unexpected token $token")
         }
@@ -36,9 +40,22 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
         return when (token.type) {
             // math symbols
             Symbol.PLUS, Symbol.SUB, Symbol.STAR, Symbol.SLASH,
-            Symbol.EQ -> {
+            Symbol.EQ, Symbol.LT, Symbol.GT -> {
                 tokens.next()
                 SqlBinaryExpr(left, token.text, parse(precedence) ?: throw SQLException("Error parsing infix"))
+            }
+            // keywords
+            Keyword.AS -> {
+                tokens.next()
+                SqlAlias(left, parseIdentifier())
+            }
+            Keyword.AND -> {
+                tokens.next()
+                SqlBinaryExpr(left, token.text, parse(precedence) ?: throw SQLException("Error parsing infix"))
+            }
+            Keyword.ASC, Keyword.DESC -> {
+                tokens.next()
+                SqlSort(left, token.type == Keyword.ASC)
             }
             else -> throw IllegalStateException("Unexpected infix token $token")
         }
@@ -62,7 +79,19 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
                 groupBy = parseExprList()
             }
 
-            return SqlSelect(projection, selection, groupBy, table.id)
+            // having clause
+            var having: SqlExpr? = null
+            if (tokens.consumeKeyword(Keyword.HAVING)) {
+                having = parseExpr()
+            }
+
+            // order by clause
+            var orderBy: List<SqlExpr> = listOf()
+            if (tokens.consumeKeywords(listOf(Keyword.ORDER, Keyword.BY))) {
+                orderBy = parseOrder()
+            }
+
+            return SqlSelect(projection, selection, groupBy, orderBy, having, table.id)
         } else {
             throw IllegalStateException("Expected FROM keyword, found ${tokens.peek()}")
         }
@@ -79,6 +108,37 @@ class SqlParser(val tokens: TokenStream) : PrattParser {
         } else {
             throw IllegalStateException("Expect LEFT PAREN symbol, found ${tokens.peek()}")
         }
+    }
+
+    private fun parseIdentifier(): SqlIdentifier {
+        val expr = parseExpr() ?: throw SQLException("Expected identifier, found EOF")
+        return when (expr) {
+            is SqlIdentifier -> expr
+            else -> throw SQLException("Expected identifier, found $expr")
+        }
+    }
+
+    private fun parseOrder(): List<SqlSort> {
+        val sortList = mutableListOf<SqlSort>()
+        // loop over sorts
+        var sort = parseExpr()
+        while (sort != null) {
+            sort = when (sort) {
+                is SqlIdentifier -> SqlSort(sort, true)
+                is SqlSort -> sort
+                else -> throw IllegalStateException("Unexpected expression $sort after order by.")
+            }
+            sortList.add(sort)
+
+            // move to next sort
+            if (tokens.peek()?.type == Symbol.COMMA) {
+                tokens.next()
+            } else {
+                break
+            }
+            sort = parseExpr()
+        }
+        return sortList
     }
 
     private fun parseExprList(): List<SqlExpr> {

@@ -22,6 +22,35 @@ class SqlTokenizerTest {
     }
 
     @Test
+    fun `tokenize SELECT with binary expression`() {
+        val expected = listOf(
+            Token("SELECT", Keyword.SELECT, 6),
+            Token("salary", Literal.IDENTIFIER, 13),
+            Token("*", Symbol.STAR, 15),
+            Token("0.1", Literal.DOUBLE, 19),
+            Token("FROM", Keyword.FROM, 24),
+            Token("employee", Literal.IDENTIFIER, 33)
+        )
+        val actual = SqlTokenizer("SELECT salary * 0.1 FROM employee").tokenize().tokens
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `tokenize SELECT WITH aliased binary expression`() {
+        val expected = listOf(
+            Token("SELECT", Keyword.SELECT, 6),
+            Token("salary", Literal.IDENTIFIER, 13),
+            Token("*", Symbol.STAR, 15),
+            Token("0.1", Literal.DOUBLE, 19),
+            Token("AS", Keyword.AS, 22),
+            Token("bonus", Literal.IDENTIFIER, 28),
+            Token("FROM", Keyword.FROM, 33),
+            Token("employee", Literal.IDENTIFIER, 42)
+        )
+        val actual = SqlTokenizer("SELECT salary * 0.1 AS bonus FROM employee").tokenize().tokens
+    }
+
+    @Test
     fun `tokenize SELECT with WHERE`() {
         val expected = listOf(
             Token("SELECT", Keyword.SELECT, 6),
@@ -58,6 +87,35 @@ class SqlTokenizerTest {
                 Token("state", Literal.IDENTIFIER, 54)
             )
         val actual = SqlTokenizer("SELECT state, MAX(salary) FROM employee GROUP BY state").tokenize().tokens
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `tokenize SELECT with aggregates and HAVING`() {
+        val expected = listOf(
+            Token("SELECT", Keyword.SELECT, 6),
+            Token("state", Literal.IDENTIFIER, 12),
+            Token(",", Symbol.COMMA, 13),
+            Token("MAX", Keyword.MAX, 17),
+            Token("(", Symbol.LEFT_PAREN, 18),
+            Token("salary", Literal.IDENTIFIER, 24),
+            Token(")", Symbol.RIGHT_PAREN, 25),
+            Token("FROM", Keyword.FROM, 30),
+            Token("employee", Literal.IDENTIFIER, 39),
+            Token("GROUP", Keyword.GROUP, 45),
+            Token("BY", Keyword.BY, 48),
+            Token("state", Literal.IDENTIFIER, 54),
+            Token("HAVING", Literal.IDENTIFIER, 61),
+            Token("MAX", Keyword.MAX, 65),
+            Token("(", Symbol.LEFT_PAREN, 66),
+            Token("salary", Literal.IDENTIFIER, 72),
+            Token(")", Symbol.RIGHT_PAREN, 73),
+            Token(">", Symbol.GT, 75),
+            Token("10", Literal.LONG, 78)
+        )
+        val actual = SqlTokenizer("SELECT state, MAX(salary) FROM employee GROUP BY state HAVING MAX(salary) > 10").tokenize()
+            .tokens
 
         assertEquals(expected, actual)
     }

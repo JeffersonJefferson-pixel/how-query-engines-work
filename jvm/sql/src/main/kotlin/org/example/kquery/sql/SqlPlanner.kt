@@ -24,6 +24,9 @@ class SqlPlanner {
         } else {
             plan = planAggregatedQuery(select, plan, projectionExpr)
         }
+        if (select.having != null) {
+            plan = plan.filter(createLogicalExpr(select.having, plan))
+        }
         return plan
     }
 
@@ -41,6 +44,9 @@ class SqlPlanner {
                     Symbol.STAR.text -> Multiply(l, r)
                     Symbol.SLASH.text -> Divide(l, r)
                     Symbol.EQ.text -> Eq(l, r)
+                    Symbol.GT.text -> Gt(l, r)
+                    Symbol.LT.text -> Lt(l, r)
+                    Keyword.AND.name -> And(l, r)
                     else -> throw SQLException("Invalid operator ${expr.op}")
                 }
             }
@@ -51,6 +57,7 @@ class SqlPlanner {
                     }
                     else -> throw SQLException("Invalid aggregate function $expr")
                 }
+            is SqlAlias -> Alias(createLogicalExpr(expr.expr, input), expr.alias.id)
             else -> throw UnsupportedOperationException()
         }
     }

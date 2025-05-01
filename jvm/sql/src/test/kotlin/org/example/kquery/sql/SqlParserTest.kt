@@ -21,6 +21,26 @@ class SqlParserTest {
     }
 
     @Test
+    fun `parse SELECT with binary expression`() {
+        val select = parseSelect("SELECT salary * 0.1 FROM employee")
+        assertEquals("employee", select.tableName)
+        assertEquals(
+            listOf(SqlBinaryExpr(SqlIdentifier("salary"), "*", SqlDouble(0.1))),
+            select.projection
+        )
+    }
+
+    @Test
+    fun `parse SELECT with aliased binary expression`() {
+        val select = parseSelect("SELECT salary * 0.1 AS bonus FROM employee")
+        assertEquals("employee", select.tableName)
+        assertEquals(
+            listOf(SqlAlias(SqlBinaryExpr(SqlIdentifier("salary"), "*", SqlDouble(0.1)), SqlIdentifier("bonus"))),
+            select.projection
+        )
+    }
+
+    @Test
     fun `parse SELECT with WHERE`() {
         val select = parseSelect("SELECT id, first_name, last_name FROM employee WHERE state = 'CO'")
         assertEquals(
@@ -29,6 +49,13 @@ class SqlParserTest {
         )
         assertEquals(SqlBinaryExpr(SqlIdentifier("state"), "=", SqlString("CO")), select.selection)
         assertEquals("employee", select.tableName)
+    }
+
+    @Test
+    fun `parse SELECT with ORDER`() {
+        val select = parseSelect("SELECT state, salary FROM employee ORDER BY salary desc, state")
+        assertEquals(listOf(SqlIdentifier("state"), SqlIdentifier("salary")), select.projection)
+        assertEquals(listOf(SqlSort(SqlIdentifier("salary"), false), SqlSort(SqlIdentifier("state"), true)), select.orderBy)
     }
 
     @Test
@@ -42,6 +69,17 @@ class SqlParserTest {
             listOf(SqlIdentifier("state")),
             select.groupBy
         )
+        assertEquals("employee", select.tableName)
+    }
+
+    @Test
+    fun `parse SELECT with aggregates and HAVING`() {
+        val select = parseSelect("SELECT state, MAX(salary) AS top_wage FROM employee GROUP BY state HAVING MAX(salary) > 10 AND MAX(salary) < 100")
+        val max = SqlFunction("MAX", listOf(SqlIdentifier("salary")))
+        val alias = SqlAlias(max, SqlIdentifier("top_wage"))
+        assertEquals(listOf(SqlIdentifier("state"), alias), select.projection)
+        assertEquals(listOf(SqlIdentifier("state")), select.groupBy)
+        assertEquals(SqlBinaryExpr(SqlBinaryExpr(max, ">", SqlLong(10)), "AND", SqlBinaryExpr(max, "<", SqlLong(100))), select.having)
         assertEquals("employee", select.tableName)
     }
 

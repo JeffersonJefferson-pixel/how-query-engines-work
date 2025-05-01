@@ -44,12 +44,35 @@ class SqlPlannerTest {
     }
 
     @Test
+    fun `select filter on alias`() {
+        val plan = plan("SELECT last_name AS foo FROM employee WHERE foo = 'Einstein'")
+        assertEquals(
+            "Selection: #foo = 'Einstein'\n" +
+            "\tProjection: #last_name as foo\n" +
+            "\t\tScan: ; projection=None\n",
+            format(plan)
+        )
+    }
+
+    @Test
     fun `plan aggregate query`() {
         val plan = plan("SELECT state, MAX(salary) FROM employee GROUP BY state")
         assertEquals(
             "Projection: #0, #1\n" +
             "\tAggregate: groupExpr=[#state], aggregateExpr=[MAX(#salary)]\n" +
             "\t\tScan: ; projection=None\n",
+            format(plan)
+        )
+    }
+
+    @Test
+    fun `plan aggregate query with HAVING`() {
+        val plan = plan("SELECT state, MAX(salary) FROM employee GROUP BY state HAVING MAX(salary) > 10")
+        assertEquals(
+            "Selection: MAX(#salary) > 10\n" +
+            "\tProjection: #0, #1\n" +
+            "\t\tAggregate: groupExpr=[#state], aggregateExpr=[MAX(#salary)]\n" +
+            "\t\t\tScan: ; projection=None\n",
             format(plan)
         )
     }
